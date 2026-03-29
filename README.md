@@ -1,83 +1,95 @@
 ﻿# hindi-asr-whisper-finetuning
 
-End-to-end implementation for the Hindi ASR assignment (Q1-Q4):
-- Q1: Whisper-small fine-tuning + baseline vs fine-tuned WER + error analysis
+Production-style, reproducible Hindi ASR assignment implementation covering:
+- Q1: Whisper-small fine-tuning + FLEURS evaluation + error taxonomy + fix analysis
 - Q2: Raw ASR cleanup pipeline (number normalization + English word tagging)
-- Q3: Spelling quality classification with confidence and low-confidence review
-- Q4: Lattice-based WER evaluation and method explanation
+- Q3: Spelling quality classification with confidence + low-confidence audit
+- Q4: Lattice-based evaluation with fair WER handling
 
-## 1) Prerequisites
+## What this repo gives you
+- Clean `src/` scripts for each question
+- End-to-end execution flow
+- Structured outputs in `reports/`
+- Reproducible command list for fresh machines
 
+Architecture: [docs/architecture.md](./docs/architecture.md)
+
+## Table of Contents
+- [1. Requirements](#1-requirements)
+- [2. Setup](#2-setup)
+- [3. Dataset Layout](#3-dataset-layout)
+- [4. Run Paths](#4-run-paths)
+- [5. Question-wise Commands](#5-question-wise-commands)
+- [6. Expected Outputs](#6-expected-outputs)
+- [7. Troubleshooting](#7-troubleshooting)
+- [8. What to Commit](#8-what-to-commit)
+
+## 1. Requirements
 - Python 3.10+
 - Git
-- Recommended for faster runs: NVIDIA GPU (CPU works but is slow)
+- Optional but recommended: NVIDIA GPU (CPU works but is much slower)
 
-## 2) Clone and setup
+## 2. Setup
 
 ```bash
 git clone https://github.com/shubh100802/hindi-asr-whisper-finetuning.git
 cd hindi-asr-whisper-finetuning
 python -m venv .venv
-# Windows PowerShell
+```
+
+Windows PowerShell:
+
+```powershell
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
-## 3) Required data files (place at repo root)
+Linux/macOS:
 
-Put these files in the repository root:
+```bash
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+## 3. Dataset Layout
+Put these XLSX files in repo root:
 - `dataset_1bujiO2N.xlsx`
 - `dataset_17DwCAx6.xlsx`
 - `dataset_1J_I0rao.xlsx`
 - `dataset_1JItJnil.xlsx`
 
-Create dataset folders under repo root:
-- `downloads/audio`
-- `downloads/transcriptions`
-- `downloads/metadata`
-
-The code expects downloaded local dataset files in these folders.
-
-## 4) Project structure
+Create this local data structure:
 
 ```text
-src/
-  shared_helpers.py
-  q1_whisper_pipeline.py
-  whisper_finetune_runner.py
-  whisper_fleurs_evaluator.py
-  q1_finalize_reports.py
-  q2_cleanup_pipeline.py
-  q3_spelling_audit.py
-  q4_lattice_wer.py
-  q5_data_readiness.py
-  run_all_questions.py
-reports/        # generated outputs
-artifacts/      # generated intermediate files/models
+downloads/
+  audio/
+  transcriptions/
+  metadata/
 ```
 
-## 5) Quick run (all non-heavy steps)
+## 4. Run Paths
+
+### A) Fast validation run (non-heavy)
 
 ```bash
 python src/run_all_questions.py --project_root . --skip_q1_training
 ```
 
-This runs:
-- Q1 preprocessing only
-- Q2 full cleanup pipeline
-- Q3 spelling pipeline
-- Q4 lattice scoring
-- Q5 data readiness report
+### B) Full assignment run
+Run Q1-heavy path + Q2/Q3/Q4 scripts manually (recommended for control):
+1. Q1 preprocessing
+2. Q1 fine-tuning
+3. Q1 FLEURS eval
+4. Q1 final report shaping
+5. Q2, Q3, Q4 scripts
 
-## 6) Q1 full run (fine-tune + FLEURS eval)
+## 5. Question-wise Commands
 
-### 6.1 Build Q1 manifest
+### Q1: Preprocess + Fine-tune + Evaluate + Finalize
 
 ```bash
 python src/q1_whisper_pipeline.py --project_root .
 ```
-
-### 6.2 Fine-tune Whisper-small
 
 ```bash
 python -m src.whisper_finetune_runner \
@@ -94,8 +106,6 @@ python -m src.whisper_finetune_runner \
   --warmup_steps 10
 ```
 
-### 6.3 Evaluate baseline vs fine-tuned on FLEURS (Hindi)
-
 ```bash
 python src/whisper_fleurs_evaluator.py \
   --baseline_model openai/whisper-small \
@@ -106,70 +116,68 @@ python src/whisper_fleurs_evaluator.py \
   --output_csv ./reports/q1_wer_report.csv
 ```
 
-Notes:
-- `--max_eval_samples -1` means full Hindi test split.
-- On CPU this can take a long time.
-
-### 6.4 Generate Q1 final analysis artifacts
-
 ```bash
 python src/q1_finalize_reports.py --project_root .
 ```
 
-## 7) Q2 run
+Notes:
+- Use `--max_eval_samples -1` for full Hindi FLEURS test split.
+- On CPU this can take a long time.
+
+### Q2: Cleanup Pipeline
 
 ```bash
 python src/q2_cleanup_pipeline.py --project_root . --sample_size 104
 ```
 
-Outputs:
-- `reports/q2_cleanup_results.csv`
-- `reports/q2_examples_and_metrics.json`
-
-## 8) Q3 run
+### Q3: Spelling Audit
 
 ```bash
 python src/q3_spelling_audit.py --project_root .
 ```
 
-Outputs:
-- `reports/q3_word_spelling_classification.csv`
-- `reports/q3_word_spelling_classification.xlsx`
-- `reports/q3_low_confidence_review.csv`
-- `reports/q3_summary.json`
-
-## 9) Q4 run
+### Q4: Lattice WER
 
 ```bash
 python src/q4_lattice_wer.py --project_root .
 ```
 
-Outputs:
-- `reports/q4_lattice_wer_report.csv`
-- `reports/q4_methodology.json`
+## 6. Expected Outputs
 
-## 10) All key outputs checklist
+Primary files in `reports/`:
+- `q1_wer_report.csv`, `q1_wer_report.json`
+- `q1_error_samples.csv`, `q1_error_taxonomy.json`
+- `q1_top_fixes.json`, `q1_fix_before_after.csv`, `q1_completion_summary.json`
+- `q2_cleanup_results.csv`, `q2_examples_and_metrics.json`
+- `q3_word_spelling_classification.csv`, `q3_word_spelling_classification.xlsx`
+- `q3_low_confidence_review.csv`, `q3_summary.json`
+- `q4_lattice_wer_report.csv`, `q4_methodology.json`
+- `SUBMISSION_CHECKLIST.md`
 
-A checklist file is generated at:
-- `reports/SUBMISSION_CHECKLIST.md`
+Primary files in `artifacts/`:
+- `q1_training_manifest.csv`
+- `q1_predictions.csv`
+- `q1_whisper_finetuned/` (trained checkpoint)
 
-## 11) Troubleshooting
-
-- If ASR evaluation is too slow on CPU, first test with smaller sample:
-  - `--max_eval_samples 20`
-- If a run gets stuck, stop Python processes and rerun:
+## 7. Troubleshooting
+- Slow evaluation on CPU:
+  - Start with `--max_eval_samples 20` to smoke-test.
+- Stuck Python processes:
   - PowerShell: `Get-Process | ? ProcessName -like 'python*' | Stop-Process -Force`
-- If Devanagari text displays incorrectly in terminal, ensure UTF-8 output is enabled.
+- Devanagari display issue in terminal:
+  - Use UTF-8 terminal/profile.
+- Hugging Face download limits:
+  - Set `HF_TOKEN` for better reliability.
 
-## 12) What to commit
-
-Commit only source and lightweight project files:
+## 8. What to Commit
+Commit:
 - `src/`
-- `requirements.txt`
 - `README.md`
+- `requirements.txt`
 - `.gitignore`
+- `docs/architecture.md`
 
-Do **not** commit:
-- `downloads/` raw data
-- trained model weights
-- heavy report csv/xlsx artifacts unless explicitly needed
+Do not commit:
+- `downloads/`
+- large model checkpoints
+- heavy generated reports unless explicitly required
