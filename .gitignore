@@ -1,0 +1,27 @@
+﻿# ========== PYTHON ==========
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+
+# ========== DATA ==========
+downloads/
+*.wav
+*.mp3
+*.flac
+*.jsonl
+
+# ========== TRAINING OUTPUTS ==========
+artifacts/
+reports/
+
+# ========== LARGE INPUT FILES ==========
+dataset_*.xlsx
+*.pdf
+
+# ========== OS / EDITOR ==========
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
